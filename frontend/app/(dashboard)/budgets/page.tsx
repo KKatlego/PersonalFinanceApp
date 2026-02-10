@@ -6,14 +6,16 @@
 
 import { useState, useEffect } from 'react'
 import { DashboardLayout } from '@/components/layout'
-import { BudgetCard } from '@/components/budgets'
+import { BudgetCard, BudgetFormModal } from '@/components/budgets'
 import { Button } from '@/components/common'
 import { Loading } from '@/components/common'
 import { formatCurrency } from '@/lib/utils'
 import { budgetsApi, ApiError } from '@/lib/api'
+import type { Category } from '@/types'
 
 export default function BudgetsPage() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
+  const [editBudget, setEditBudget] = useState<{ id: string; category: Category; maximum: number; theme: string } | null>(null)
   const [budgets, setBudgets] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -60,11 +62,22 @@ export default function BudgetsPage() {
   }
 
   const handleEdit = (id: string) => {
-    // TODO: Implement edit functionality
-    console.log('Edit budget:', id)
+    const budget = budgets.find((b) => b.id === id)
+    if (budget) {
+      setEditBudget({
+        id: budget.id,
+        category: budget.category,
+        maximum: Number(budget.maximum),
+        theme: budget.theme,
+      })
+    }
   }
 
   const handleDelete = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this budget?')) {
+      return
+    }
+
     try {
       await budgetsApi.delete(id)
       // Refresh the list
@@ -72,6 +85,11 @@ export default function BudgetsPage() {
     } catch (err) {
       console.error('Failed to delete budget:', err)
     }
+  }
+
+  const handleCloseModal = () => {
+    setIsAddModalOpen(false)
+    setEditBudget(null)
   }
 
   const totalSpent = budgets.reduce((sum, b) => sum + Number(b.spent || 0), 0)
@@ -128,13 +146,13 @@ export default function BudgetsPage() {
         )}
       </div>
 
-      {/* TODO: Add Budget Modal */}
-      {/* {isAddModalOpen && (
-        <AddBudgetModal
-          isOpen={isAddModalOpen}
-          onClose={() => setIsAddModalOpen(false)}
-        />
-      )} */}
+      {/* Add/Edit Budget Modal */}
+      <BudgetFormModal
+        isOpen={isAddModalOpen || editBudget !== null}
+        onClose={handleCloseModal}
+        onSuccess={fetchBudgets}
+        editData={editBudget ?? undefined}
+      />
     </DashboardLayout>
   )
 }

@@ -6,7 +6,7 @@
 
 import { useState, useEffect } from 'react'
 import { DashboardLayout } from '@/components/layout'
-import { PotCard } from '@/components/pots'
+import { PotCard, PotFormModal, AddMoneyModal, WithdrawModal } from '@/components/pots'
 import { Button } from '@/components/common'
 import { Loading } from '@/components/common'
 import { formatCurrency } from '@/lib/utils'
@@ -14,6 +14,9 @@ import { potsApi, ApiError } from '@/lib/api'
 
 export default function PotsPage() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
+  const [editPot, setEditPot] = useState<{ id: string; name: string; target: number; theme: string } | null>(null)
+  const [addMoneyPot, setAddMoneyPot] = useState<{ id: string; name: string; total: number; target: number; theme: string } | null>(null)
+  const [withdrawPot, setWithdrawPot] = useState<{ id: string; name: string; total: number; target: number; theme: string } | null>(null)
   const [pots, setPots] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -40,27 +43,61 @@ export default function PotsPage() {
   }
 
   const handleAddMoney = (id: string) => {
-    // TODO: Implement add money modal
-    console.log('Add money to pot:', id)
+    const pot = pots.find((p) => p.id === id)
+    if (pot) {
+      setAddMoneyPot({
+        id: pot.id,
+        name: pot.name,
+        total: Number(pot.total),
+        target: Number(pot.target),
+        theme: pot.theme,
+      })
+    }
   }
 
   const handleWithdraw = (id: string) => {
-    // TODO: Implement withdraw modal
-    console.log('Withdraw from pot:', id)
+    const pot = pots.find((p) => p.id === id)
+    if (pot) {
+      setWithdrawPot({
+        id: pot.id,
+        name: pot.name,
+        total: Number(pot.total),
+        target: Number(pot.target),
+        theme: pot.theme,
+      })
+    }
   }
 
   const handleEdit = (id: string) => {
-    // TODO: Implement edit functionality
-    console.log('Edit pot:', id)
+    const pot = pots.find((p) => p.id === id)
+    if (pot) {
+      setEditPot({
+        id: pot.id,
+        name: pot.name,
+        target: Number(pot.target),
+        theme: pot.theme,
+      })
+    }
   }
 
   const handleDelete = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this pot? The money will be returned to your balance.')) {
+      return
+    }
+
     try {
       await potsApi.delete(id)
       fetchPots()
     } catch (err) {
       console.error('Failed to delete pot:', err)
     }
+  }
+
+  const handleCloseAllModals = () => {
+    setIsAddModalOpen(false)
+    setEditPot(null)
+    setAddMoneyPot(null)
+    setWithdrawPot(null)
   }
 
   const totalSaved = pots.reduce((sum, pot) => sum + Number(pot.total), 0)
@@ -118,13 +155,29 @@ export default function PotsPage() {
         )}
       </div>
 
-      {/* TODO: Add Pot Modal */}
-      {/* {isAddModalOpen && (
-        <AddPotModal
-          isOpen={isAddModalOpen}
-          onClose={() => setIsAddModalOpen(false)}
-        />
-      )} */}
+      {/* Add/Edit Pot Modal */}
+      <PotFormModal
+        isOpen={isAddModalOpen || editPot !== null}
+        onClose={handleCloseAllModals}
+        onSuccess={fetchPots}
+        editData={editPot ?? undefined}
+      />
+
+      {/* Add Money Modal */}
+      <AddMoneyModal
+        isOpen={addMoneyPot !== null}
+        onClose={handleCloseAllModals}
+        onSuccess={fetchPots}
+        pot={addMoneyPot}
+      />
+
+      {/* Withdraw Modal */}
+      <WithdrawModal
+        isOpen={withdrawPot !== null}
+        onClose={handleCloseAllModals}
+        onSuccess={fetchPots}
+        pot={withdrawPot}
+      />
     </DashboardLayout>
   )
 }
