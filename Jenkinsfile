@@ -170,7 +170,7 @@ pipeline {
                             }
 
                             # Upload frontend
-                            Upload-Files "deploy-package\frontend" "$ftpDir/frontend"
+                            Upload-Files "deploy-package/frontend" "$ftpDir/frontend"
 
                             # Upload backend (skip node_modules - too large, will install on server)
                             Write-Host "Uploading backend files..."
@@ -179,12 +179,12 @@ pipeline {
                             Create-FtpDirectory "$ftpDir/backend/lib"
 
                             # Upload dist folder
-                            Upload-Files "deploy-package\backend\dist" "$ftpDir/backend/dist"
-                            Upload-Files "deploy-package\backend\prisma" "$ftpDir/backend/prisma"
-                            Upload-Files "deploy-package\backend\lib" "$ftpDir/backend/lib"
+                            Upload-Files "deploy-package/backend/dist" "$ftpDir/backend/dist"
+                            Upload-Files "deploy-package/backend/prisma" "$ftpDir/backend/prisma"
+                            Upload-Files "deploy-package/backend/lib" "$ftpDir/backend/lib"
 
                             # Upload root backend files
-                            $files = Get-ChildItem "deploy-package\backend" -File
+                            $files = Get-ChildItem "deploy-package/backend" -File
                             foreach ($file in $files) {
                                 $uri = "ftp://$ftpHost$ftpDir/backend/" + $file.Name
                                 Write-Host "Uploading backend root:" $file.Name
