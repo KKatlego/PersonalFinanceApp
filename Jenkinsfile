@@ -139,7 +139,7 @@ pipeline {
                                 $items = Get-ChildItem $sourcePath -Recurse
                                 foreach ($item in $items) {
                                     $relativePath = $item.FullName.Substring((Get-Item $sourcePath).FullName.Length)
-                                    $targetFile = $targetPath + $relativePath -replace "\\", "/"
+                                    $targetFile = $targetPath + $relativePath -replace "\\\\", "/"
 
                                     # Create directory if needed
                                     if ($item.PSIsContainer) {
